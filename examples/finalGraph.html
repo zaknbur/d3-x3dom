@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<!-- metadata -->
+		<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+		<meta content="utf-8" http-equiv="encoding">
+		
+		<!-- x3d links -->
+		<div id="x3d_links">
+			<script src="https://d3js.org/d3.v5.min.js"></script> 
+			<script src="http://x3dom.org/release/x3dom-full.js"></script> 
+			<link rel="stylesheet" href="https://x3dom.org/download/dev/x3dom.css"/>
+		</div>
+			<script src="SaundersChartBuilder.js"></script>
+	</head>
+	
+	<body>
+		<!-- holds the x3d scene -->
+		<div id="chartholder"></div>
+		
+		<script>
+			var temp, i, firstKeyVal, secondKeyVal, badKeys;
+			var xval, yval, zval;
+			var firstKeys = ["male",  "female"];
+			var secondKeys = ["Black", "White", "Other"];
+			var data = [
+				{
+					key : "Male",
+					values : [
+						{ key : "Black", value : 0},
+						{ key : "White", value : 0},
+						{ key : "Other", value : 0},
+					]
+				},
+				{
+					key : "Female",
+					values : [
+						{ key : "Black", value : 0},
+						{ key : "White", value : 0},
+						{ key : "Other", value : 0},
+					]
+				}
+			]
+
+			function makeGraph(things) {				
+				for (i = 0; i < 100; i++) {
+					xval = things[i].resource.gender
+					yval = things[i].resource.extension[0].valueCodeableConcept.coding[0].display
+					
+					firstKeyVal = firstKeys.indexOf(xval)
+					secondKeyVal = secondKeys.indexOf(yval)
+					if (secondKeyVal < 0) {
+						secondKeyVal = 2
+					}
+					if (firstKeyVal < 0) {
+						firstKeyVal = 1
+					}
+					data[firstKeyVal].values[secondKeyVal].value += 1
+				}
+				
+				var chartHolder = d3.select("#chartholder")
+				var myChart = d3.x3dom.chart.barChartMultiSeries()
+				chartHolder.datum(data).call(myChart)
+				
+				var container = document.getElementById("chartholder")
+				var content = container.innerHTML
+				container.innerHTML = content
+			}
+			
+			async function getUserAsync(url) {
+				let response = await fetch(url)
+				console.log("still going")
+				let stuff = await response.json()
+				<!-- make the makeGraph function call wait for the fetch stuff? -->
+				console.log("closed")
+				makeGraph(stuff.entry)
+			}
+			 
+			getUserAsync('https://syntheticmass.mitre.org/fhir/Patient?_count=100')
+		</script>
+	</body>
+</html>
